@@ -1,2 +1,2 @@
 # Camera_Project
-Camera surveilance system using gopre copy
+Camera surveilance system using gopro copy
