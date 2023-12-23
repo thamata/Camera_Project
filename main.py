@@ -1,40 +1,70 @@
 import time
 import cv2
+# from datetime import datetime
 
-# Capture duration
-duration = 10
+def detect_motion(frame1, frame2):
+    # Convert frames to grayscale
+    gray1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
+    gray2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
 
-cap = cv2.VideoCapture(0)
+    # Compute the absolute difference between frames
+    frame_diff = cv2.absdiff(gray1, gray2)
 
-# Capture properties
-cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('U','Y','V','Y'))
-cap.set(cv2.CAP_PROP_FRAME_WIDTH,100)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT,100)
+    # Threshold the difference image
+    _, thresh = cv2.threshold(frame_diff, 50, 255, cv2.THRESH_BINARY)
 
-if (cap.isOpened()==False):
-    print("Error reading video file")
+    # Find contours
+    contours, _ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-Width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-Height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    # Check if any contour is detected
+    return len(contours) > 0
 
-# VideoWriter will store output as .avi
-result = cv2.VideoWriter('output.avi',cv2.VideoWriter_fourcc(*'MJPG'),30,(640,480))
+def main():
+    cap = cv2.VideoCapture(0)
+    
+    frame1 = None
+    frame2 = None
 
-start_time = time.time()
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-while(int(time.time()-start_time) < duration):
-    ret,frame=cap.read()
-    if ret==True:
-        result.write(frame)
-        cv2.imshow("OpenCVCam", frame)
+        if frame1 is None:
+
+            frame1 = frame.copy()
+            continue
+
+        frame2 = frame1
+        frame1 = frame.copy()
+
+        if detect_motion(frame1, frame2):
+            t = time.time()
+            # timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            timestamp = time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(t))
+            filename = f"E://Nackademin//Camera_Project//Recordings//activity_{timestamp}.avi" #Literal String Interpolation
+            
+            # Create video writer object
+            fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            out = cv2.VideoWriter(filename, fourcc, 30.0, (frame.shape[1], frame.shape[0]))
+            
+            # Record video for a few seconds (you can change this duration)
+            for _ in range(200): 
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                out.write(frame)
+            
+            out.release()
+            print(f"Activity detected! Video saved as {filename}")
+
+        cv2.imshow('Door Monitoring', frame)
         
-        #Press Q to stop the process
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-    else:
-        break
 
-# Release video capture and write result
-cap.release()
-result.release()
-cv2.destroyAllWindows()
+    cap.release()
+    cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    main()
