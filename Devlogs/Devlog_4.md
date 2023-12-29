@@ -1,25 +1,19 @@
-import time
-import cv2
-from threading import Thread
+### Date: 29/12/2023
 
-def detect_motion(frame1, frame2):
-    # Convert frames to grayscale
-    gray1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
-    gray2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
+Found the cause for live feed not working, i put print commands where the motion detection function ends and where the cv2.imshow displays a frame. 
+When there is no movement the feed works without delay, but as soon as a motion is detected the feed is paused because cv2.imshow is not being called anymore. 
 
-    # Compute the absolute difference between frames
-    frame_diff = cv2.absdiff(gray1, gray2)
+<br><br>
+Trying to use threads to run the live feed. But running in to an issue where the main loop does not start after a thread is started.
+Error is: https://stackoverflow.com/questions/63156943/opencv-cvcapture-msmfgrabframe-videoiomsmf-cant-grab-frame-error-214748
 
-    # Threshold the difference image
-    _, thresh = cv2.threshold(frame_diff, 50, 255, cv2.THRESH_BINARY)
-
-    # Find contours
-    contours, _ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # print("motion detection")
-    # Check if any contour is detected
-    return len(contours) > 0
-
+<br><br>
+more research:
+<br>
+https://stackoverflow.com/questions/55099413/python-opencv-streaming-from-camera-multithreading-timestamps
+https://realpython.com/intro-to-python-threading/
+<br><br>
+```Python
 class VideoStreamWidget(object):
     def __init__(self, src=0):
         self.capture = cv2.VideoCapture(src)
@@ -40,9 +34,6 @@ class VideoStreamWidget(object):
         frame2 = None
         # Read the next frame from the stream in a different thread
         while True:
-            if self.thread.is_alive():
-                print("thread 1 active")
-
             ret, frame = self.capture.read()
             if not ret:
                 break
@@ -100,3 +91,17 @@ def main():
 if __name__ == "__main__":
     video_stream_widget = VideoStreamWidget()
     main()
+```
+
+<br><br>
+Finally realized that the video feed lags depending on where the .read call happens, i put the .read in the thread where the video gets displayed and the video is displayed without delay... but the motion detection stops working until i close that thread. This seems to be the case even when multithreadng as the video source is shared? The plus side to this is that i now get a single video output, hurray!
+<br><br>
+In the above code the show_frame function seems to have prio in the class as it defines self.frame with self.capture.read(). After putting a threadalive for the first thread i notice this: 
+### cource of action in the program:
+1. live feed is running and both threads are active
+2. as soon as a motion is detected the .read in thread1 starts buffering and thread2 keeps running fine
+3. after thread1 has finished reading it keeps on being active.
+### Summary
+What i thought was the program not responding was actually just the .read function buffering the frames. I now have a working live feed that records any movement, but the program needs to buffer the recording before it can detect movement again. 
+### ToDo:
+1. Fix double recording issue
