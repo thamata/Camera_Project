@@ -2,11 +2,9 @@
 
 Found the cause for live feed not working, i put print commands where the motion detection function ends and where the cv2.imshow displays a frame. 
 When there is no movement the feed works without delay, but as soon as a motion is detected the feed is paused because cv2.imshow is not being called anymore. 
-
 <br>
 Trying to use threads to run the live feed. But running in to an issue where the main loop does not start after a thread is started.
 Error is: https://stackoverflow.com/questions/63156943/opencv-cvcapture-msmfgrabframe-videoiomsmf-cant-grab-frame-error-214748
-
 <br>
 more research:
 <br>
@@ -14,6 +12,7 @@ https://stackoverflow.com/questions/55099413/python-opencv-streaming-from-camera
 https://realpython.com/intro-to-python-threading/
 <br>
 ```Python
+
 class VideoStreamWidget(object):
     def __init__(self, src=0):
         self.capture = cv2.VideoCapture(src)
