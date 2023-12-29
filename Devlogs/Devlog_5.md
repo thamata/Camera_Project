@@ -31,3 +31,4 @@ The script now opens a window and displays the live feed from cv2, window has tw
 ### ToDo
 1. Try to change motion detection to only include part of the video feed, current build too sensitive
 2. Add more features to the GUI
+3. Add a way to close everything through the GUI, currently ctrl+c in console
