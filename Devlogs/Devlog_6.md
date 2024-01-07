@@ -17,16 +17,13 @@ I still want to keep the core functionality of my script where i utilize two cor
 In the process of improving the motion detection function i added more functionalities and imporovements. 
 
 1. Config file. The script now has a config file for fine tuning the motion detection parameters and duration of the video capture as well as the path for the recordings
-<br>
 The config file utilizes the built in python library configparser.
 2. Threading is now handled more carefully and each thread is executed and instantiated in different dunctions. I have also added a stop function for the threads.
-<br>
 Each thread still starts in _init_ but has its own function. A stop_threads function is also called upon program close that uses a flag in each threaded function. 
-<br>
 Previously if was just while(True) and now it is while self.is_running
 3. The script now stops on exiting the tkinter window.
-<br>
-This is handled by using a function in the tkinter library called protocol that then calls my stop_threads function and closes the tkinter root. 
+This is handled by using a function in the tkinter library called protocol that then calls my stop_threads function and closes the tkinter root.
+
 ```Python
     def on_closing():
         video_stream_widget.stop_threads()  # Call the method to stop threads and release resources
